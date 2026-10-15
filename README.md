@@ -52,3 +52,5 @@ MIT
 
 ## Pricing from sold comps
 The `price-from-comps` skill prices new items from eBay's public Sold listings in the browser (3–5 exact-match sales from the last 60–90 days), then applies simple start-price and Buy It Now rules. It only proposes prices; it never lists anything.
+
+Auto-lists after pricing (no per-card approval); under $5 and non-cards still ask first.
