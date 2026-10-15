@@ -49,3 +49,6 @@ MIT
 
 ## Order totals
 `get_orders` totals come from eBay's Fulfillment API `pricingSummary.total`: item price plus shipping, **excluding** sales tax that eBay collects and remits for you. That is why they can be a few percent lower than the buyer-paid amount shown in some eBay views.
+
+## Pricing from sold comps
+The `price-from-comps` skill prices new items from eBay's public Sold listings in the browser (3–5 exact-match sales from the last 60–90 days), then applies simple start-price and Buy It Now rules. It only proposes prices; it never lists anything.
