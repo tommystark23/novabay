@@ -1,0 +1,27 @@
+{
+  "name": "novabay",
+  "displayName": "NovaBay",
+  "version": "1.0.0",
+  "description": "Read-only eBay seller dashboard: live listings, bids, watchers, sales and orders, plus a skill that builds a local NovaBay command-deck dashboard.",
+  "author": {
+    "name": "NovaStation"
+  },
+  "homepage": "https://shop.dogtraineroc.com",
+  "repository": "https://github.com/tommystark23/novabay",
+  "license": "MIT",
+  "logo": "assets/logo.png",
+  "keywords": ["ebay", "seller", "dashboard", "mcp", "sports-cards", "ecommerce", "read-only"],
+  "category": "productivity",
+  "tags": ["ebay", "ecommerce", "mcp", "dashboard"],
+  "mcpServers": "./mcp.json",
+  "skills": "./skills/",
+  "variables": {
+    "type": "object",
+    "properties": {
+      "EBAY_CLIENT_ID": {"type": "string", "title": "eBay App ID (Client ID)", "description": "Production App ID from developer.ebay.com. Leave blank with NOVABAY_DEMO=1."},
+      "EBAY_CLIENT_SECRET": {"type": "string", "title": "eBay Cert ID (Client Secret)", "description": "Production Cert ID from developer.ebay.com."},
+      "EBAY_REFRESH_TOKEN": {"type": "string", "title": "eBay user refresh token", "description": "User refresh token for your own seller account (see README)."},
+      "NOVABAY_DEMO": {"type": "string", "title": "Demo mode", "description": "Set to 1 to return built-in sample data with no eBay account.", "enum": ["0", "1"], "default": "0"}
+    }
+  }
+}

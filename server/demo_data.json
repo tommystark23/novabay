@@ -1,0 +1,21 @@
+{
+  "seller": "demo_seller",
+  "active": [
+    {"item_id": "DEMO-1001", "title": "1999 Topps Chrome Rookie #201 (Sample)", "type": "Auction", "price": 14.50, "currency": "USD", "bids": 3, "watchers": 6, "buy_it_now": null, "end_time_offset_h": 20},
+    {"item_id": "DEMO-1002", "title": "2020 Prizm Silver Rookie (Sample)", "type": "Auction", "price": 9.95, "currency": "USD", "bids": 1, "watchers": 4, "buy_it_now": null, "end_time_offset_h": 0.6},
+    {"item_id": "DEMO-1003", "title": "Holo Rare Pokemon Card, Near Mint (Sample)", "type": "FixedPrice", "price": 24.99, "currency": "USD", "bids": 0, "watchers": 2, "buy_it_now": 24.99, "end_time_offset_h": 240},
+    {"item_id": "DEMO-1004", "title": "1989 Upper Deck Star Rookie (Sample)", "type": "Auction", "price": 0.99, "currency": "USD", "bids": 0, "watchers": 1, "buy_it_now": null, "end_time_offset_h": 52},
+    {"item_id": "DEMO-1005", "title": "2023 Bowman Chrome Auto /99 (Sample)", "type": "Auction", "price": 31.00, "currency": "USD", "bids": 5, "watchers": 9, "buy_it_now": null, "end_time_offset_h": 30},
+    {"item_id": "DEMO-1006", "title": "Formula 1 Topps Chrome Refractor (Sample)", "type": "Auction", "price": 0.99, "currency": "USD", "bids": 0, "watchers": 0, "buy_it_now": null, "end_time_offset_h": 70}
+  ],
+  "sales": [
+    {"item_id": "DEMO-0901", "title": "1996 Finest Refractor (Sample)", "price": 42.00, "currency": "USD", "sold_days_ago": 1},
+    {"item_id": "DEMO-0902", "title": "Team Lot, 25 cards (Sample)", "price": 12.50, "currency": "USD", "sold_days_ago": 3},
+    {"item_id": "DEMO-0903", "title": "PSA 9 Graded Rookie (Sample)", "price": 88.00, "currency": "USD", "sold_days_ago": 6}
+  ],
+  "orders": [
+    {"order_id": "DEMO-ORD-1", "item_id": "DEMO-0901", "title": "1996 Finest Refractor (Sample)", "total": 46.95, "currency": "USD", "payment_status": "PAID", "fulfillment_status": "NOT_STARTED", "days_ago": 1},
+    {"order_id": "DEMO-ORD-2", "item_id": "DEMO-0902", "title": "Team Lot, 25 cards (Sample)", "total": 17.45, "currency": "USD", "payment_status": "PENDING", "fulfillment_status": "NOT_STARTED", "days_ago": 3},
+    {"order_id": "DEMO-ORD-3", "item_id": "DEMO-0903", "title": "PSA 9 Graded Rookie (Sample)", "total": 92.95, "currency": "USD", "payment_status": "PAID", "fulfillment_status": "FULFILLED", "days_ago": 6}
+  ]
+}

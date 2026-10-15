@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "novabay-ebay": {
+      "command": "python3",
+      "args": ["${CURSOR_PLUGIN_ROOT}/server/novabay_mcp.py"],
+      "env": {
+        "EBAY_CLIENT_ID": "${EBAY_CLIENT_ID}",
+        "EBAY_CLIENT_SECRET": "${EBAY_CLIENT_SECRET}",
+        "EBAY_REFRESH_TOKEN": "${EBAY_REFRESH_TOKEN}",
+        "NOVABAY_DEMO": "${NOVABAY_DEMO}"
+      }
+    }
+  }
+}

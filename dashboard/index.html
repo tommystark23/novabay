@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NovaBay - eBay Seller Dashboard</title>
+<style>
+:root{--bg:#070b16;--panel:#0f1629;--line:#1f2a44;--txt:#e6ecff;--dim:#8796b8;--cyan:#35d6ff;--amber:#ffb547;--mint:#3ee6a4;--red:#ff5d6c}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% 0,#13204a,var(--bg) 60%);color:var(--txt);font:14px/1.4 system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+header{display:flex;align-items:center;gap:16px;padding:18px 28px;border-bottom:1px solid var(--line)}
+h1{margin:0;font-size:22px;letter-spacing:.12em}h1 b{color:var(--cyan)}.shop{color:var(--dim)}
+.badge{margin-left:auto;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:700;letter-spacing:.08em}
+.live{background:#0e3b2c;color:var(--mint)}.stale{background:#3d2a0b;color:var(--amber)}.off{background:#3b1119;color:var(--red)}.demo{background:#1b2b55;color:var(--cyan)}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;padding:20px 28px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}.stat .n{font-size:28px;font-weight:800}.stat .l{color:var(--dim);font-size:11px;letter-spacing:.12em}
+main{display:grid;grid-template-columns:2fr 1fr;gap:18px;padding:0 28px 28px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.tile{position:relative;background:linear-gradient(160deg,#16213d,#0c1224);border:1px solid var(--line);border-radius:12px;padding:12px;min-height:150px}
+.tile .art{height:62px;border-radius:8px;background:linear-gradient(135deg,#22346a,#0f1a38);display:flex;align-items:center;justify-content:center;color:#4a5f95;font-size:24px;margin-bottom:8px}
+.tile .t{font-weight:600;font-size:13px;min-height:36px}.tile .p{font-size:18px;font-weight:800;color:var(--cyan)}
+.tile .tag{position:absolute;top:8px;right:8px;background:var(--amber);color:#1a1000;font-size:11px;font-weight:800;padding:2px 7px;border-radius:6px}
+.tile.hot{border-color:var(--amber);box-shadow:0 0 18px #ffb54733}.tile.urgent .tag{background:var(--red);color:#fff}
+.meta{color:var(--dim);font-size:12px}
+section h2{font-size:12px;letter-spacing:.14em;color:var(--dim);margin:0 0 10px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:16px}
+.row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line)}.row:last-child{border:0}
+.pill{font-size:11px;padding:2px 8px;border-radius:99px;font-weight:700}.paid{background:#0e3b2c;color:var(--mint)}.waiting{background:#3d2a0b;color:var(--amber)}.shipped{background:#1b2b55;color:var(--cyan)}
+footer{color:var(--dim);font-size:11px;padding:0 28px 20px}
+</style></head><body>
+<header><h1>NOVA<b>BAY</b></h1><span class="shop" id="shop"></span><span id="badge" class="badge off">NOT CONNECTED</span></header>
+<div class="stats" id="stats"></div>
+<main>
+  <section><h2>ACTIVE LISTINGS</h2><div class="grid" id="grid"></div></section>
+  <aside><section class="panel"><h2>ORDERS</h2><div id="orders"></div></section>
+         <section class="panel"><h2>RECENT SALES</h2><div id="sold"></div></section></aside>
+</main>
+<footer>Read-only view. NovaBay never lists, revises or ends eBay listings. Buyer names and addresses are never shown.</footer>
+<script src="demo-data.js"></script>
+<script>
+const $=id=>document.getElementById(id), money=n=>'$'+Number(n||0).toFixed(2);
+function left(end){const s=(new Date(end)-Date.now())/1e3;if(s<=0)return'ended';const d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60);return d?`${d}d ${h}h`:h?`${h}h ${m}m`:`${m}m`;}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function render(){
+  const L=window.NOVABAY_LIVE, b=$('badge');
+  if(!L||!L.ok){b.className='badge off';b.textContent='NOT CONNECTED';return;}
+  const age=(Date.now()-new Date(L.at))/1e3;
+  if(L.source==='demo'){b.className='badge demo';b.textContent='DEMO DATA';}
+  else if(age>300){b.className='badge stale';b.textContent='STALE';}else{b.className='badge live';b.textContent='LIVE';}
+  $('shop').textContent=L.shop||'';
+  const A=L.active||[], bids=A.reduce((a,x)=>a+x.bids,0), w=A.reduce((a,x)=>a+x.watchers,0);
+  const owed=(L.orders||[]).filter(o=>o.status==='waiting payment').reduce((a,o)=>a+o.total,0);
+  const S=[[A.length,'LIVE'],[bids,'BIDS'],[w,'WATCHERS'],[money((L.sold||[]).reduce((a,x)=>a+x.price,0)),'SOLD (30D)'],[money(owed),'AWAITING PAYMENT']];
+  $('stats').innerHTML=S.map(([n,l])=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
+  $('grid').innerHTML=A.slice().sort((a,b)=>new Date(a.end)-new Date(b.end)).map(x=>{
+    const urgent=(new Date(x.end)-Date.now())<3600e3, hot=x.bids>0;
+    return `<div class="tile ${hot?'hot':''} ${urgent?'urgent':''}">${hot?`<span class="tag">${x.bids} BID${x.bids>1?'S':''}</span>`:''}
+      <div class="art">&#9824;</div><div class="t">${esc(x.title)}</div><div class="p">${money(x.price)}</div>
+      <div class="meta">${x.type==='Auction'?'Auction':'Buy It Now'} &middot; ${x.watchers} watching &middot; ${left(x.end)}</div></div>`;}).join('');
+  $('orders').innerHTML=(L.orders||[]).map(o=>`<div class="row"><span>${esc(o.title)}<br><span class="meta">${money(o.total)}</span></span><span class="pill ${o.status.split(' ')[0]}">${esc(o.status)}</span></div>`).join('');
+  $('sold').innerHTML=(L.sold||[]).map(s=>`<div class="row"><span>${esc(s.title)}</span><b>${money(s.price)}</b></div>`).join('');
+}
+render(); setInterval(()=>{const s=document.createElement('script');s.src='novabay-live.js?t='+Date.now();s.onload=()=>{render();s.remove();};s.onerror=()=>s.remove();document.body.appendChild(s);},30000);
+</script></body></html>
