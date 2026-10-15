@@ -65,6 +65,10 @@ def _http(req, retries=2):
             if e.code in (429, 500, 502, 503) and attempt < retries:
                 time.sleep(2 ** attempt * 2); continue
             raise RuntimeError("eBay HTTP %s: %s" % (e.code, e.read()[:300].decode("utf8", "replace")))
+        except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
+            if attempt < retries:
+                time.sleep(2 ** attempt * 2); continue
+            raise RuntimeError("eBay network error: %s" % getattr(e, "reason", e))
 
 # ---------------- auth ----------------
 _token = {"value": None, "exp": 0}
@@ -95,6 +99,20 @@ def trading(call, inner):
         raise RuntimeError("eBay error: " + (root.findtext(".//e:LongMessage", "", NS) or "unknown"))
     return root
 
+def _duration_s(d):
+    """ISO-8601 duration from eBay TimeLeft, e.g. P3DT4H5M6S -> seconds."""
+    import re
+    m = re.match(r"P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$", d or "")
+    if not m or not any(m.groups()): return None
+    dd, h, mi, se = (int(x or 0) for x in m.groups())
+    return dd * 86400 + h * 3600 + mi * 60 + se
+
+def _end_time(it):
+    end = it.findtext("e:ListingDetails/e:EndTime", "", NS)
+    if end: return end
+    left = _duration_s(it.findtext("e:TimeLeft", "", NS))
+    return iso(dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=left)) if left else ""
+
 def _f(el, path):
     try: return float(el.findtext(path, "0", NS) or 0)
     except ValueError: return 0.0
@@ -117,7 +135,7 @@ def live_selling():
                 "bids": int(ss.findtext("e:BidCount", "0", NS) or 0) if ss is not None else 0,
                 "watchers": int(it.findtext("e:WatchCount", "0", NS) or 0),
                 "buy_it_now": _f(it, "e:BuyItNowPrice") or None,
-                "end_time": it.findtext("e:ListingDetails/e:EndTime", "", NS),
+                "end_time": _end_time(it),
                 "url": it.findtext("e:ListingDetails/e:ViewItemURL", "", NS) or "https://www.ebay.com/itm/" + iid})
         sales = []
         for o in root.findall("e:SoldList/e:OrderTransactionArray/e:OrderTransaction", NS):
@@ -126,7 +144,9 @@ def live_selling():
                 if it is None: continue
                 sales.append({"item_id": it.findtext("e:ItemID", "", NS), "title": it.findtext("e:Title", "", NS),
                               "price": _f(tx, "e:TotalTransactionPrice") or _f(it, "e:SellingStatus/e:CurrentPrice"),
-                              "currency": "USD", "sold_at": tx.findtext("e:CreatedDate", "", NS)})
+                              "currency": "USD", "sold_at": tx.findtext("e:CreatedDate", "", NS),
+                              "paid": bool(tx.findtext("e:PaidTime", "", NS)),
+                              "order_id": o.findtext("e:Order/e:OrderID", "", NS) or tx.findtext("e:OrderLineItemID", "", NS)})
         return {"active": active, "sales": sales}
     return cached("selling", fetch)
 
@@ -142,9 +162,17 @@ def live_orders(days):
             tot = (o.get("pricingSummary") or {}).get("total") or {}
             # Buyer username, name, address, email and phone are deliberately dropped.
             out.append({"order_id": o.get("orderId"), "item_id": li.get("legacyItemId"), "title": li.get("title"),
-                        "items": len(o.get("lineItems") or []), "total": float(tot.get("value", 0) or 0),
+                        "items": len(o.get("lineItems") or []), "total": float(tot.get("value", 0) or 0), "total_note": "buyer total excluding sales tax eBay collects and remits",
                         "currency": tot.get("currency", "USD"), "payment_status": o.get("orderPaymentStatus"),
                         "fulfillment_status": o.get("orderFulfillmentStatus"), "created_at": o.get("creationDate")})
+        # The Fulfillment API leaves out sales where the buyer has not checked out / paid yet.
+        # Add those from the sold list we already fetched (no extra eBay call).
+        have = set(x["item_id"] for x in out)
+        for s in live_selling()["sales"]:
+            if not s.get("paid") and s["item_id"] not in have and (s.get("sold_at") or "") >= since:
+                out.append({"order_id": s.get("order_id") or None, "item_id": s["item_id"], "title": s["title"], "items": 1,
+                            "total": s["price"], "currency": s.get("currency", "USD"), "payment_status": "AWAITING_PAYMENT",
+                            "fulfillment_status": "NOT_STARTED", "created_at": s.get("sold_at")})
         return out
     return cached("orders:%d" % days, fetch)
 
@@ -201,7 +229,7 @@ def t_orders(a):
 
 def t_summary(a):
     act = get_active(); sales = t_sales({"days": 30}); orders = get_orders_data(30)
-    soon = [x for x in act if (_seconds_left(x.get("end_time", "")) or 1e9) < 3600]
+    soon = [x for x in act if (lambda s: s is not None and s < 3600)(_seconds_left(x.get("end_time", "")))]
     return {"mode": "demo" if DEMO else "live", "as_of": iso(dt.datetime.now(dt.timezone.utc)),
             "active_listings": len(act), "auctions": sum(1 for x in act if x["type"] == "Auction"),
             "total_bids": sum(x["bids"] for x in act), "total_watchers": sum(x["watchers"] for x in act),

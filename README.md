@@ -46,3 +46,6 @@ With `NOVABAY_DEMO=0` and no keys, tools return a clear "eBay keys missing" erro
 
 ## License
 MIT
+
+## Order totals
+`get_orders` totals come from eBay's Fulfillment API `pricingSummary.total`: item price plus shipping, **excluding** sales tax that eBay collects and remits for you. That is why they can be a few percent lower than the buyer-paid amount shown in some eBay views.
